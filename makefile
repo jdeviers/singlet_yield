@@ -5,7 +5,7 @@ OBJS = $(patsubst %.f90,%.o,$(MODS))
 PROGRAM = sy_n
 
 FC      = gfortran
-FCFLAGS = -fbacktrace -Wall -Wtabs
+FCFLAGS = -fbacktrace -Wall -Wtabs -fcheck=all
 LPFLAGS = -llapack
 
 
