@@ -1,5 +1,6 @@
 PROGRAM prog_sy
 	USE mod_sy_proc
+	USE OMP_LIB
 	implicit none
 
 	COMPLEX(8),ALLOCATABLE :: Sxyz1(:,:,:),Sxyz2(:,:,:)
@@ -45,7 +46,7 @@ PROGRAM prog_sy
 !
 ! -- Calc singlet yield with second method
 	CALL CPU_TIME(t0)
-	v = evalYield(k,Sxyz1,lambda1,Sxyz2,lambda2)
+	v = evalYield_offdiag2p(k,Sxyz1,lambda1,Sxyz2,lambda2)
 	CALL CPU_TIME(t1)
 
 	WRITE(*,'(/,A,E10.3)') 'Second method: v = ',v
