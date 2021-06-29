@@ -5,8 +5,8 @@ PROGRAM prog_sy
 	COMPLEX(8),ALLOCATABLE :: Sxyz1(:,:,:),Sxyz2(:,:,:)
 	REAL(dp)  ,ALLOCATABLE :: lambda1(:),lambda2(:)
 	REAL(dp)               :: v
-	REAL(dp),PARAMETER     :: k = 1.
-	INTEGER ,PARAMETER     :: N = 5
+	REAL(dp),PARAMETER     :: k = 1. ! Initial value for k_f
+	INTEGER ,PARAMETER     :: N = 5  ! NxN S_(x,y,z) operators
 	INTEGER                :: i
 
 !	.. Timing vars ..
@@ -35,12 +35,20 @@ PROGRAM prog_sy
 	CALL RANDOM_NUMBER(lambda2)
 !
 
-! -- Calc singlet yield
+! -- Calc singlet yield with first method
 	CALL CPU_TIME(t0)
 	v = evalYield(k,Sxyz1,lambda1,Sxyz2,lambda2)
 	CALL CPU_TIME(t1)
 
-	WRITE(*,'(/,A,E10.3)') 'v = ',v
+	WRITE(*,'(/,A,E10.3)') 'First method: v = ',v
+	WRITE(*,'(A,E10.3,A,I0)') 'Timing: ',t1-t0, 's for N = ',N
+!
+! -- Calc singlet yield with second method
+	CALL CPU_TIME(t0)
+	v = evalYield(k,Sxyz1,lambda1,Sxyz2,lambda2)
+	CALL CPU_TIME(t1)
+
+	WRITE(*,'(/,A,E10.3)') 'Second method: v = ',v
 	WRITE(*,'(A,E10.3,A,I0)') 'Timing: ',t1-t0, 's for N = ',N
 !
 
