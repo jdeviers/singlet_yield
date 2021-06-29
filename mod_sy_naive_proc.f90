@@ -1,4 +1,4 @@
-MODULE mod_sy_naive_proc
+MODULE mod_sy_proc
 	implicit none
 
 	INTEGER(4),PARAMETER ::            &
@@ -10,20 +10,20 @@ MODULE mod_sy_naive_proc
 		FMT_LCMPLX='(*( "(" SP E10.3 X SP E10.3 " i)" 2X ))'
 
 
-
 	contains
 
+! ----------
 	REAL(dp) FUNCTION evalYield(k,Sxyz1,lambda1,Sxyz2,lambda2)
 		implicit none
 
 !	.. Parameters ..
 		COMPLEX(8),ALLOCATABLE :: Sxyz1(:,:,:),Sxyz2(:,:,:)
 		REAL(dp),  ALLOCATABLE :: lambda1(:),lambda2(:)
+		REAL(dp)               :: k
 !	.. Local scalars ..
 		INTEGER                :: a1,a2,b1,b2
 		INTEGER                :: d1,d2,z
-		REAL(dp)               :: v,k,k2,dl1,dl2
-!		COMPLEX(8)             ::
+		REAL(dp)               :: v,k2,dl1,dl2
 !	.. Local tensors ..
 		COMPLEX(8),ALLOCATABLE :: sA(:),sB(:)
 
@@ -51,5 +51,41 @@ MODULE mod_sy_naive_proc
 		evalYield = 0.25d0 + v
 
 	END FUNCTION evalYield
+! ----------
+	REAL(dp) FUNCTION evalYield_offdiag2p(k,Sxyz1,lambda1,Sxyz2,lambda2)
+		implicit none
 
-END MODULE mod_sy_naive_proc
+!	.. Parameters ..
+		COMPLEX(8),ALLOCATABLE :: Sxyz1(:,:,:),Sxyz2(:,:,:)
+		REAL(dp),  ALLOCATABLE :: lambda1(:),lambda2(:)
+		REAL(dp)               :: k
+!	.. Local scalars ..
+		INTEGER                :: a1,d1,d2,z
+		REAL(dp)               :: v,k2
+
+
+		d1 = UBOUND(Sxyz1,3); d2 = UBOUND(Sxyz2,3) ! NOTE: 1-indexing
+		z = FLOOR( (d1*d2)/4. ); v=0.; k2 = k*k
+
+		DO a1 = 1,d1
+			v = v + evalYield_offdiag2p_kernel_F( k2,INT(a1),Sxyz1(:,:,a1),lambda1,Sxyz2,lambda2 )
+		END DO
+		v = 2 * (v * k2 / z)
+		evalYield_offdiag2p = v
+
+	END FUNCTION evalYield_offdiag2p
+! ----------
+	REAL(dp) FUNCTION evalYield_offdiag2p_kernel_F(k2,a1,Sxyz1_a1,lambda1,Sxyz2,lambda2)
+		implicit none
+
+!	.. Parameters ..
+		COMPLEX(8),ALLOCATABLE :: Sxyz2(:,:,:)
+		REAL(dp),  ALLOCATABLE :: lambda1(:),lambda2(:)
+		COMPLEX(8)             :: Sxyz1_a1(:,:)
+		REAL(dp)               :: k2
+		INTEGER                :: a1	
+
+
+	END FUNCTION evalYield_offdiag2p_kernel_F
+! ----------
+END MODULE mod_sy_proc

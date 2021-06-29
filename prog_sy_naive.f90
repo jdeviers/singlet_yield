@@ -1,5 +1,5 @@
-PROGRAM prog_sy_naive
-	USE mod_sy_naive_proc
+PROGRAM prog_sy
+	USE mod_sy_proc
 	implicit none
 
 	COMPLEX(8),ALLOCATABLE :: Sxyz1(:,:,:),Sxyz2(:,:,:)
@@ -7,47 +7,66 @@ PROGRAM prog_sy_naive
 	REAL(dp)               :: v
 	REAL(dp),PARAMETER     :: k = 1.
 	INTEGER ,PARAMETER     :: N = 5
-	INTEGER                :: i,j
+	INTEGER                :: i
+
+!	.. Timing vars ..
+	REAL(dp)               :: t0,t1
 
 
-	ALLOCATE( Sxyz1(3,N,N),Sxyz2(3,N,N))
-	WRITE(11,*) Sxyz1,Sxyz2
+! -- Allocations
+	ALLOCATE( Sxyz1(3,N,N),Sxyz2(3,N,N) )
+!
 
+! -- Init Sxyz1,2 with random complex values
 	DO i=1,3
 		CALL INIT_A_RND(N,Sxyz1(i,:,:))
-		WRITE(*,'(/,A,I0,A)') 'Block ',i,' of Sxyz1:' 
-		CALL PRINT_CMAT(Sxyz1(i,:,:))
+!		WRITE(*,'(/,A,I0,A)') 'Block ',i,' of Sxyz1:' 
+!		CALL PRINT_CMAT(Sxyz1(i,:,:))
 
 		CALL INIT_A_RND(N,Sxyz2(i,:,:))
-		WRITE(*,'(/,A,I0,A)') 'Block ',i,' of Sxyz2:' 
-		CALL PRINT_CMAT(Sxyz2(i,:,:))
+!		WRITE(*,'(/,A,I0,A)') 'Block ',i,' of Sxyz2:' 
+!		CALL PRINT_CMAT(Sxyz2(i,:,:))
 	END DO
+!
 
+! -- Init lambda1,2 with random complex values
 	ALLOCATE( lambda1(N),lambda2(N) )
 	CALL RANDOM_NUMBER(lambda1)
 	CALL RANDOM_NUMBER(lambda2)
+!
 
+! -- Calc singlet yield
+	CALL CPU_TIME(t0)
 	v = evalYield(k,Sxyz1,lambda1,Sxyz2,lambda2)
-	WRITE(*,'(/,A,E10.3)') 'v = ',v
+	CALL CPU_TIME(t1)
 
+	WRITE(*,'(/,A,E10.3)') 'v = ',v
+	WRITE(*,'(A,E10.3,A,I0)') 'Timing: ',t1-t0, 's for N = ',N
+!
+
+! -- Deallocations 
 	DEALLOCATE(Sxyz1,Sxyz2)
 	DEALLOCATE(lambda1,lambda2)
 
 	contains
 
-	SUBROUTINE INIT_A_RND(N,A) ! Creates square complex matrix with random coeffs
+	SUBROUTINE INIT_A_RND(N,A) ! Creates Hermitian matrix with random coeffs
 		implicit none
 
 !	.. Parameters ..
-		COMPLEX(8),INTENT(OUT) :: A(:,:)
-		INTEGER,   INTENT(IN)  :: N
+		COMPLEX(8),INTENT(OUT)  :: A(:,:)
+		INTEGER,   INTENT(IN)   :: N
+!	.. Local arrays ..
+		REAL(dp),DIMENSION(N,N) :: Re,Im
+		INTEGER                 :: i,j
 
-!	.. Local scalars ..
-		INTEGER,PARAMETER      :: IDIST = 1
-		INTEGER                :: i,ISEED(4)
-
+		CALL RANDOM_NUMBER(Re)
+		CALL RANDOM_NUMBER(Im)
 		DO i=1,N
-			CALL ZLARNV(IDIST,ISEED,N,A(:,i))
+			DO j=i,N
+				A(i,j) = COMPLEX( Re(i,j),Im(i,j) )
+				A(j,i) = CONJG( A(i,j) )
+			END DO
 		END DO
 
 	END SUBROUTINE INIT_A_RND
@@ -67,4 +86,4 @@ PROGRAM prog_sy_naive
 	END SUBROUTINE PRINT_CMAT
 
 
-END PROGRAM prog_sy_naive
+END PROGRAM prog_sy
