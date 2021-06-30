@@ -1,17 +1,16 @@
 PROGRAM prog_sy
 	USE mod_sy_proc
-	USE OMP_LIB
 	implicit none
 
 	COMPLEX(8),ALLOCATABLE :: Sxyz1(:,:,:),Sxyz2(:,:,:)
 	REAL(dp)  ,ALLOCATABLE :: lambda1(:),lambda2(:)
 	REAL(dp)               :: v
 	REAL(dp),PARAMETER     :: k = 1. ! Initial value for k_f
-	INTEGER ,PARAMETER     :: N = 100  ! NxN S_(x,y,z) operators
+	INTEGER ,PARAMETER     :: N = 50  ! NxN S_(x,y,z) operators
 	INTEGER                :: i
 
 !	.. Timing vars ..
-	REAL(dp)               :: t0,t1
+	INTEGER                :: it0,it1,rate ! CPU_TIME() unsuitable for parallel runs
 
 
 ! -- Allocations
@@ -35,31 +34,33 @@ PROGRAM prog_sy
 	CALL RANDOM_NUMBER(lambda1)
 	CALL RANDOM_NUMBER(lambda2)
 !
-
 ! -- Calc singlet yield with first method
-	CALL CPU_TIME(t0)
+	CALL SYSTEM_CLOCK(count_rate = rate)
+	CALL SYSTEM_CLOCK(it0)
 	v = evalYield(k,Sxyz1,lambda1,Sxyz2,lambda2)
-	CALL CPU_TIME(t1)
+	CALL SYSTEM_CLOCK(it1)
 
 	WRITE(*,'(/,A,E10.3)') 'First method: v = ',v
-	WRITE(*,'(A,E10.3,A,I0)') 'Timing: ',t1-t0, 's for N = ',N
+	WRITE(*,'(A,E10.3,A,I0)') 'Timing: ',REAL(it1-it0)/REAL(rate), 's for N = ',N
 !
 ! -- Calc singlet yield with parallelised second method
-	CALL CPU_TIME(t0)
+	CALL SYSTEM_CLOCK(count_rate = rate)
+	CALL SYSTEM_CLOCK(it0)
 	v = evalYield_offdiag2p(k,Sxyz1,lambda1,Sxyz2,lambda2)
-	CALL CPU_TIME(t1)
+	CALL SYSTEM_CLOCK(it1)
 
 	WRITE(*,'(/,A,E10.3)') 'Parallelised offdiag method: v = ',v
-	WRITE(*,'(A,E10.3,A,I0)') 'Timing: ',t1-t0, 's for N = ',N
+	WRITE(*,'(A,E10.3,A,I0)') 'Timing: ',REAL(it1-it0)/REAL(rate), 's for N = ',N
 !
 
 ! -- Calc singlet yield with serial second method
-	CALL CPU_TIME(t0)
+	CALL SYSTEM_CLOCK(count_rate = rate)
+	CALL SYSTEM_CLOCK(it0)
 	v = evalYield_offdiag2p_serial(k,Sxyz1,lambda1,Sxyz2,lambda2)
-	CALL CPU_TIME(t1)
+	CALL SYSTEM_CLOCK(it1)
 
 	WRITE(*,'(/,A,E10.3)') 'Serial offdiag method: v = ',v
-	WRITE(*,'(A,E10.3,A,I0)') 'Timing: ',t1-t0, 's for N = ',N
+	WRITE(*,'(A,E10.3,A,I0)') 'Timing: ',REAL(it1-it0)/REAL(rate), 's for N = ',N
 !
 
 ! -- Deallocations 

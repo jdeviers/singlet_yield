@@ -89,7 +89,6 @@ MODULE mod_sy_proc
 	END FUNCTION evalYield_offdiag2p
 ! ----------
 	REAL(dp) FUNCTION evalYield_offdiag2p_serial(k,Sxyz1,lambda1,Sxyz2,lambda2)
-		USE OMP_LIB
 		implicit none
 
 !	.. Parameters ..
