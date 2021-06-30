@@ -7,7 +7,7 @@ PROGRAM prog_sy
 	REAL(dp)  ,ALLOCATABLE :: lambda1(:),lambda2(:)
 	REAL(dp)               :: v
 	REAL(dp),PARAMETER     :: k = 1. ! Initial value for k_f
-	INTEGER ,PARAMETER     :: N = 5  ! NxN S_(x,y,z) operators
+	INTEGER ,PARAMETER     :: N = 100  ! NxN S_(x,y,z) operators
 	INTEGER                :: i
 
 !	.. Timing vars ..
@@ -30,7 +30,7 @@ PROGRAM prog_sy
 	END DO
 !
 
-! -- Init lambda1,2 with random complex values
+! -- Init lambda1,2 with random real values
 	ALLOCATE( lambda1(N),lambda2(N) )
 	CALL RANDOM_NUMBER(lambda1)
 	CALL RANDOM_NUMBER(lambda2)
@@ -44,12 +44,21 @@ PROGRAM prog_sy
 	WRITE(*,'(/,A,E10.3)') 'First method: v = ',v
 	WRITE(*,'(A,E10.3,A,I0)') 'Timing: ',t1-t0, 's for N = ',N
 !
-! -- Calc singlet yield with second method
+! -- Calc singlet yield with parallelised second method
 	CALL CPU_TIME(t0)
 	v = evalYield_offdiag2p(k,Sxyz1,lambda1,Sxyz2,lambda2)
 	CALL CPU_TIME(t1)
 
-	WRITE(*,'(/,A,E10.3)') 'Second method: v = ',v
+	WRITE(*,'(/,A,E10.3)') 'Parallelised offdiag method: v = ',v
+	WRITE(*,'(A,E10.3,A,I0)') 'Timing: ',t1-t0, 's for N = ',N
+!
+
+! -- Calc singlet yield with serial second method
+	CALL CPU_TIME(t0)
+	v = evalYield_offdiag2p_serial(k,Sxyz1,lambda1,Sxyz2,lambda2)
+	CALL CPU_TIME(t1)
+
+	WRITE(*,'(/,A,E10.3)') 'Serial offdiag method: v = ',v
 	WRITE(*,'(A,E10.3,A,I0)') 'Timing: ',t1-t0, 's for N = ',N
 !
 

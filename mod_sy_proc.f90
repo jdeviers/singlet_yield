@@ -17,9 +17,9 @@ MODULE mod_sy_proc
 		implicit none
 
 !	.. Parameters ..
-		COMPLEX(8),ALLOCATABLE :: Sxyz1(:,:,:),Sxyz2(:,:,:)
-		REAL(dp),  ALLOCATABLE :: lambda1(:),lambda2(:)
-		REAL(dp)               :: k
+		COMPLEX(8),ALLOCATABLE,INTENT(IN) :: Sxyz1(:,:,:),Sxyz2(:,:,:)
+		REAL(dp),  ALLOCATABLE,INTENT(IN) :: lambda1(:),lambda2(:)
+		REAL(dp)              ,INTENT(IN):: k
 !	.. Local scalars ..
 		INTEGER                :: a1,a2,b1,b2
 		INTEGER                :: d1,d2,z
@@ -30,13 +30,13 @@ MODULE mod_sy_proc
 		ALLOCATE( sA(UBOUND(Sxyz1,1)),sB(UBOUND(Sxyz2,1)) )
 
 		d1 = UBOUND(Sxyz1,3); d2 = UBOUND(Sxyz2,3) ! NOTE: 1-indexing
-		z = FLOOR( (d1*d2)/4. ); v=0.; k2 = k*k
+		z = FLOOR( (d1*d2)/4. ); v=0.d0; k2 = k*k
 
 		DO a1 = 1,d1
 			DO a2 = 1,d1
 				dl1 = lambda1(a1) - lambda1(a2)
 				sA = Sxyz1(:,a1,a2)
-				DO b1 = 1, d2
+				DO b1 = 1,d2
 					DO b2 = 1,d2
 						dl2 = lambda2(b1) - lambda2(b2)
 						sB = Sxyz2(:,b1,b2)
@@ -53,44 +53,78 @@ MODULE mod_sy_proc
 	END FUNCTION evalYield
 ! ----------
 	REAL(dp) FUNCTION evalYield_offdiag2p(k,Sxyz1,lambda1,Sxyz2,lambda2)
+		USE OMP_LIB
 		implicit none
 
 !	.. Parameters ..
-		COMPLEX(8),ALLOCATABLE :: Sxyz1(:,:,:),Sxyz2(:,:,:)
-		REAL(dp),  ALLOCATABLE :: lambda1(:),lambda2(:)
-		REAL(dp)               :: k
+		COMPLEX(8),ALLOCATABLE,INTENT(IN) :: Sxyz1(:,:,:),Sxyz2(:,:,:)
+		REAL(dp),  ALLOCATABLE,INTENT(IN) :: lambda1(:),lambda2(:)
+		REAL(dp)              ,INTENT(IN) :: k
 !	.. Local scalars ..
-		INTEGER                :: a1,d1,d2,z
-		REAL(dp)               :: v,k2
+		INTEGER                           :: a1,d1,d2,z
+		REAL(dp)                          :: v,thread_v,k2
 
 
 		d1 = UBOUND(Sxyz1,3); d2 = UBOUND(Sxyz2,3) ! NOTE: 1-indexing
-		z = FLOOR( (d1*d2)/4. ); v = 0.d0; k2 = k*k
+		z = FLOOR( (d1*d2)/4. ); k2 = k*k
 
-		DO a1 = 1,d1
-			PRINT*, 'KERNEL CALL !'
-			v = v + evalYield_offdiag2p_kernel_F( k2,INT(a1),Sxyz1(:,:,a1),lambda1,Sxyz2,lambda2 )
-		END DO
+		!$OMP PARALLEL PRIVATE(thread_v) SHARED(v)
+			thread_v = 0.d0
+			v        = 0.d0
+
+			!$OMP DO
+			DO a1 = 1,d1
+				thread_v = thread_v + evalYield_offdiag2p_kernel_F( k2,INT(a1),Sxyz1(:,:,a1),lambda1,Sxyz2,lambda2 )
+			END DO
+			!$OMP END DO
+
+			!$OMP CRITICAL
+				v = v + thread_v
+			!$OMP END CRITICAL
+
+		!$OMP END PARALLEL
 		v = 2 * (v * k2 / z)
 		evalYield_offdiag2p = v
 
 	END FUNCTION evalYield_offdiag2p
 ! ----------
+	REAL(dp) FUNCTION evalYield_offdiag2p_serial(k,Sxyz1,lambda1,Sxyz2,lambda2)
+		USE OMP_LIB
+		implicit none
+
+!	.. Parameters ..
+		COMPLEX(8),ALLOCATABLE,INTENT(IN) :: Sxyz1(:,:,:),Sxyz2(:,:,:)
+		REAL(dp),  ALLOCATABLE,INTENT(IN) :: lambda1(:),lambda2(:)
+		REAL(dp)              ,INTENT(IN) :: k
+!	.. Local scalars ..
+		INTEGER                           :: a1,d1,d2,z
+		REAL(dp)                          :: v,k2
+
+		d1 = UBOUND(Sxyz1,3); d2 = UBOUND(Sxyz2,3) ! NOTE: 1-indexing
+		z = FLOOR( (d1*d2)/4. ); k2 = k*k; v = 0.d0
+		DO a1 = 1,d1
+			v = v + evalYield_offdiag2p_kernel_F( k2,INT(a1),Sxyz1(:,:,a1),lambda1,Sxyz2,lambda2 )
+		END DO
+		v = 2 * (v * k2 / z)
+		evalYield_offdiag2p_serial = v
+
+	END FUNCTION evalYield_offdiag2p_serial
+! ----------
 	REAL(dp) FUNCTION evalYield_offdiag2p_kernel_F(k2,a1,Sxyz1_a1,lambda1,Sxyz2,lambda2)
 		implicit none
 
 !	.. Parameters ..
-		COMPLEX(8),ALLOCATABLE :: Sxyz2(:,:,:)
-		COMPLEX(8)             :: Sxyz1_a1(:,:)
-		REAL(dp),  ALLOCATABLE :: lambda1(:),lambda2(:)
-		REAL(dp)               :: k2
-		INTEGER                :: a1
+		COMPLEX(8),ALLOCATABLE,INTENT(IN) :: Sxyz2(:,:,:)
+		COMPLEX(8)            ,INTENT(IN) :: Sxyz1_a1(:,:)
+		REAL(dp),  ALLOCATABLE,INTENT(IN) :: lambda1(:),lambda2(:)
+		REAL(dp)              ,INTENT(IN) :: k2
+		INTEGER               ,INTENT(IN) :: a1
 !	.. Local arrays ..
-		COMPLEX(8),ALLOCATABLE :: Sxyz2_b1(:,:)
+		COMPLEX(8),ALLOCATABLE            :: Sxyz2_b1(:,:)
 !	.. Local scalars ..
-		INTEGER    :: a2,b1,b2,d1,d2
-		REAL(dp)   :: lambda1_a1,y,dl1,dl2
-		COMPLEX(8) :: sAx,sAy,sAz,sBx,sBy,sBz
+		INTEGER                           :: a2,b1,b2,d1,d2
+		REAL(dp)                          :: lambda1_a1,y,dl1,dl2
+		COMPLEX(8)                        :: sAx,sAy,sAz,sBx,sBy,sBz
 
 		d1 = UBOUND(Sxyz1_a1,2); d2 = UBOUND(Sxyz2,2) ! NOTE: 1-indexing
 		lambda1_a1 = lambda1(a1); y = 0.d0
@@ -102,7 +136,7 @@ MODULE mod_sy_proc
 			sAx = Sxyz1_a1(1,a2); sAy = Sxyz1_a1(2,a2); sAz = Sxyz1_a1(3,a2)
 			dl1 = lambda1_a1 - lambda1(a2)
 			DO
-				b2 = b2 + 1 ! When b1 = N (i.e d2), then b2 = N+1 i.e out of bounds
+				b2 = b2 + 1
 				IF (b2 .EQ. d2+1) THEN
 					b2 = 1; a2 = a2 + 1
 					IF (a2 .EQ. d1+1) THEN
@@ -116,10 +150,8 @@ MODULE mod_sy_proc
 
 				y = y + ( ABS(sAx*sBx + sAy*sBy + sAz*sBz)**2. / (k2 + (dl1 + dl2)**2.) ) 
 			END DO
-			WRITE(*,*) 'Perform check: ',a1,a2,b1,b2,d1,d2
 		END DO
 
-		PRINT*, 'EXITED OUTER LOOP'
 		DEALLOCATE(Sxyz2_b1)
 		evalYield_offdiag2p_kernel_F = y
 

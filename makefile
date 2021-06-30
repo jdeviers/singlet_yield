@@ -7,16 +7,17 @@ PROGRAM = sy_n
 FC      = gfortran
 FCFLAGS = -fbacktrace -Wall -Wtabs -fcheck=all
 LPFLAGS = -llapack
+MPFLAGS = -fopenmp
 
 
 # Actions for make
 default: $(PROGRAM)
 
 $(PROGRAM): $(OBJS)
-	$(FC) -o $@ $(PROG) $^ $(FCFLAGS) $(LPFLAGS)
+	$(FC) -o $@ $(PROG) $^ $(FCFLAGS) $(LPFLAGS) $(MPFLAGS)
 
 $(OBJS): %.o : %.f90 
-	$(FC) -c $< $(FCFLAGS)
+	$(FC) -c $< $(FCFLAGS) $(MPFLAGS)
 
 
 # Actions for make debug
