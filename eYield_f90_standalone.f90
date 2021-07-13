@@ -3,15 +3,14 @@ REAL(dp) FUNCTION evalYield_offdiag2p(k,Sxyz1,lambda1,Sxyz2,lambda2)
   implicit none
 
 !  .. Precision ..
-  INTEGER(4),PARAMETER ::          &
+  INTEGER(4),PARAMETER ::        &
 	sp = SELECTED_REAL_KIND(6,37), & ! 32-bits precision
 	dp = SELECTED_REAL_KIND(15,307)  ! 64-bits precision
-
-!	.. Parameters ..
+!  .. Parameters ..
   COMPLEX(8),ALLOCATABLE,INTENT(IN) :: Sxyz1(:,:,:),Sxyz2(:,:,:)
   REAL(dp),  ALLOCATABLE,INTENT(IN) :: lambda1(:),lambda2(:)
   REAL(dp)              ,INTENT(IN) :: k
-!	.. Local scalars ..
+!  .. Local scalars ..
   INTEGER                           :: a1,d1,d2,z
   REAL(dp)                          :: v,thread_v,k2
 
