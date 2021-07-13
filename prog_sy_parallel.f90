@@ -6,11 +6,12 @@ PROGRAM prog_sy
 	REAL(dp)  ,ALLOCATABLE :: lambda1(:),lambda2(:)
 	REAL(dp)               :: v
 	REAL(dp),PARAMETER     :: k = 1. ! Initial value for k_f
-	INTEGER ,PARAMETER     :: N = 50  ! NxN S_(x,y,z) operators
+	INTEGER ,PARAMETER     :: N = 1000  ! NxN S_(x,y,z) operators
 	INTEGER                :: i
 
 !	.. Timing vars ..
 	INTEGER                :: it0,it1,rate ! CPU_TIME() unsuitable for parallel runs
+
 
 ! -- Allocations
 	ALLOCATE( Sxyz1(3,N,N),Sxyz2(3,N,N) )
@@ -33,15 +34,6 @@ PROGRAM prog_sy
 	CALL RANDOM_NUMBER(lambda1)
 	CALL RANDOM_NUMBER(lambda2)
 !
-! -- Calc singlet yield with first method
-	CALL SYSTEM_CLOCK(count_rate = rate)
-	CALL SYSTEM_CLOCK(it0)
-	v = evalYield(k,Sxyz1,lambda1,Sxyz2,lambda2)
-	CALL SYSTEM_CLOCK(it1)
-
-	WRITE(*,'(/,A,E10.3)') 'First method: v = ',v
-	WRITE(*,'(A,E10.3,A,I0)') 'Timing: ',REAL(it1-it0)/REAL(rate), 's for N = ',N
-!
 ! -- Calc singlet yield with parallelised second method
 	CALL SYSTEM_CLOCK(count_rate = rate)
 	CALL SYSTEM_CLOCK(it0)
@@ -49,19 +41,8 @@ PROGRAM prog_sy
 	CALL SYSTEM_CLOCK(it1)
 
 	WRITE(*,'(/,A,E10.3)') 'Parallelised offdiag method: v = ',v
-	WRITE(*,'(A,E10.3,A,I0)') 'Timing: ',REAL(it1-it0)/REAL(rate), 's for N = ',N
+	WRITE(*,'(A,F12.3,A,I0)') 'Timing: ',REAL(it1-it0)/REAL(rate), 's for N = ',N
 !
-
-! -- Calc singlet yield with serial second method
-	CALL SYSTEM_CLOCK(count_rate = rate)
-	CALL SYSTEM_CLOCK(it0)
-	v = evalYield_offdiag2p_serial(k,Sxyz1,lambda1,Sxyz2,lambda2)
-	CALL SYSTEM_CLOCK(it1)
-
-	WRITE(*,'(/,A,E10.3)') 'Serial offdiag method: v = ',v
-	WRITE(*,'(A,E10.3,A,I0)') 'Timing: ',REAL(it1-it0)/REAL(rate), 's for N = ',N
-!
-
 ! -- Deallocations 
 	DEALLOCATE(Sxyz1,Sxyz2)
 	DEALLOCATE(lambda1,lambda2)

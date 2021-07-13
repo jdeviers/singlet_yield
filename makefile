@@ -2,7 +2,7 @@
 
 PROG_comp = prog_sy.f90
 PROG_time = prog_sy_timing.f90
-PROG_para = prog_sy_para.f90
+PROG_para = prog_sy_parallel.f90
 
 MODS = $(wildcard mod_*.f90)
 OBJS = $(patsubst %.f90,%.o,$(MODS))
@@ -12,7 +12,7 @@ PROGRAM_time = sy_t
 PROGRAM_para = sy_p
 
 FC      = gfortran
-FCFLAGS = -fbacktrace -Wall -Wno-tabs -fcheck=all
+FCFLAGS = -fbacktrace -Wall -Wtabs -fcheck=all
 MPFLAGS = -fopenmp
 
 
