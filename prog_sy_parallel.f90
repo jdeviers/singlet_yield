@@ -5,29 +5,51 @@ PROGRAM prog_sy
 	COMPLEX(8),ALLOCATABLE :: Sxyz1(:,:,:),Sxyz2(:,:,:)
 	REAL(dp)  ,ALLOCATABLE :: lambda1(:),lambda2(:)
 	REAL(dp)               :: v
-	REAL(dp),PARAMETER     :: k = 1. ! Initial value for k_f
-	INTEGER ,PARAMETER     :: N = 1000  ! NxN S_(x,y,z) operators
-	INTEGER                :: i
+	REAL(dp),PARAMETER     :: k = 1.   ! Initial value for k_f
+	INTEGER ,PARAMETER     :: N = 100  ! NxN S_(x,y,z) operators
+	INTEGER                :: i,j,io
 
 !	.. Timing vars ..
 	INTEGER                :: it0,it1,rate ! CPU_TIME() unsuitable for parallel runs
 
+!	.. Input files
+	CHARACTER(LEN=40)      :: Sxyz1_file,Sxyz2_file
 
 ! -- Allocations
 	ALLOCATE( Sxyz1(3,N,N),Sxyz2(3,N,N) )
 !
+! -- If Sxyz1 and 2 files are provided as arguments, read them
+	IF ( IARGC() .GT. 0 ) THEN
+		CALL GETARG(1,Sxyz1_file)
+		OPEN(10,file=Sxyz1_file,status='OLD',action='READ')
+		DO i=1,3
+			DO j=1,N
+				READ(10,*,iostat=io) Sxyz1(i,j,:)
+			END DO
+		END DO
+		CLOSE(10)
 
-! -- Init Sxyz1,2 with random complex values
-	DO i=1,3
-		CALL INIT_A_RND(N,Sxyz1(i,:,:))
-!		WRITE(*,'(/,A,I0,A)') 'Block ',i,' of Sxyz1:' 
-!		CALL PRINT_CMAT(Sxyz1(i,:,:))
+		CALL GETARG(2,Sxyz2_file)
+		OPEN(10,file=Sxyz2_file,status='OLD',action='READ')
+		DO i=1,3
+			DO j=1,N
+				READ(10,*,iostat=io) Sxyz2(i,j,:)
+			END DO
+		END DO
+		CLOSE(10)
+	ELSE
+! -- Else, init Sxyz1,2 with random complex values
+		DO i=1,3
+			CALL INIT_A_RND(N,Sxyz1(i,:,:))
+!			WRITE(*,'(/,A,I0,A)') 'Block ',i,' of Sxyz1:' 
+!			CALL PRINT_CMAT(Sxyz1(i,:,:))
 
-		CALL INIT_A_RND(N,Sxyz2(i,:,:))
-!		WRITE(*,'(/,A,I0,A)') 'Block ',i,' of Sxyz2:' 
-!		CALL PRINT_CMAT(Sxyz2(i,:,:))
-	END DO
+			CALL INIT_A_RND(N,Sxyz2(i,:,:))
+!			WRITE(*,'(/,A,I0,A)') 'Block ',i,' of Sxyz2:' 
+!			CALL PRINT_CMAT(Sxyz2(i,:,:))
+		END DO
 !
+	END IF
 
 ! -- Init lambda1,2 with random real values
 	ALLOCATE( lambda1(N),lambda2(N) )
@@ -41,7 +63,7 @@ PROGRAM prog_sy
 	CALL SYSTEM_CLOCK(it1)
 
 	WRITE(*,'(/,A,E10.3)') 'Parallelised offdiag method: v = ',v
-	WRITE(*,'(A,F12.3,A,I0)') 'Timing: ',REAL(it1-it0)/REAL(rate), 's for N = ',N
+	WRITE(*,'(A,E10.3,A,I0)') 'Timing: ',REAL(it1-it0)/REAL(rate), 's for N = ',N
 !
 ! -- Deallocations 
 	DEALLOCATE(Sxyz1,Sxyz2)

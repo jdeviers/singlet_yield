@@ -15,7 +15,7 @@ PROGRAM prog_sy_timing
 
 
 	OPEN(10,file='timings.dat',status='unknown',action='write',position='append')
-	DO N=5,100,5
+	DO N=5,250,5
 ! -- Allocations
 		ALLOCATE( Sxyz1(3,N,N),Sxyz2(3,N,N) )
 !

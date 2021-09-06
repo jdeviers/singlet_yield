@@ -12,6 +12,7 @@ PROGRAM prog_sy
 !	.. Timing vars ..
 	INTEGER                :: it0,it1,rate ! CPU_TIME() unsuitable for parallel runs
 
+
 ! -- Allocations
 	ALLOCATE( Sxyz1(3,N,N),Sxyz2(3,N,N) )
 !

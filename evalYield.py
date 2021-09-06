@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import numpy as np
 
 def evalYield(k, Sxyz1, lambda1, Sxyz2, lambda2):
