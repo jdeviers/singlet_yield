@@ -12,4 +12,4 @@
 f2py --fcompiler='gnu95' --f90flags="-fopenmp" -c eYield_f90_staticbounds.f90 -m eYield_f90_staticbounds
 
 # Array bounds delared at: compile time for the function, runtime for the kernel
-f2py --fcompiler='gnu95' --f90flags="-fopenmp" -c eYield_f90.f90              -m eYield_f90
+f2py --fcompiler='gnu95' --f90flags="-fopenmp" -c eYield_f90_dynakernel.f90   -m eYield_f90_dynakernel
