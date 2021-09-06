@@ -1,21 +1,18 @@
-DOUBLE PRECISION FUNCTION evalYield_offdiag2p(k,Sxyz1,lambda1,Sxyz2,lambda2)
+DOUBLE PRECISION FUNCTION evalYield_offdiag2p(d1,d2,k,Sxyz1,lambda1,Sxyz2,lambda2)
   USE OMP_LIB
   implicit none
 
-!  .. Precision ..
-  INTEGER(4),PARAMETER ::        &
-	sp = SELECTED_REAL_KIND(6,37), & ! 32-bits precision
-	dp = SELECTED_REAL_KIND(15,307)  ! 64-bits precision
 !  .. Parameters ..
-  COMPLEX(8),ALLOCATABLE,INTENT(IN) :: Sxyz1(:,:,:),Sxyz2(:,:,:)
-  REAL(dp),  ALLOCATABLE,INTENT(IN) :: lambda1(:),lambda2(:)
-  REAL(dp)              ,INTENT(IN) :: k
+  INTEGER,INTENT(IN) :: d1,d2
+  COMPLEX(8),INTENT(IN) :: Sxyz1(3,d1,d1),Sxyz2(3,d2,d2)
+  DOUBLE PRECISION,INTENT(IN) :: lambda1(d1),lambda2(d2)
+  DOUBLE PRECISION              ,INTENT(IN) :: k
 !  .. Local scalars ..
-  INTEGER                           :: a1,d1,d2,z
-  REAL(dp)                          :: v,thread_v,k2
+  INTEGER                           :: a1,z
+  DOUBLE PRECISION                          :: v,thread_v,k2
 
 
-  d1 = UBOUND(Sxyz1,3); d2 = UBOUND(Sxyz2,3) ! NOTE: 1-indexing
+!  d1 = UBOUND(Sxyz1,3); d2 = UBOUND(Sxyz2,3) ! NOTE: 1-indexing
   z = FLOOR( (d1*d2)/4. ); k2 = k*k
 
   !$OMP PARALLEL PRIVATE(thread_v) SHARED(v)
@@ -38,20 +35,20 @@ DOUBLE PRECISION FUNCTION evalYield_offdiag2p(k,Sxyz1,lambda1,Sxyz2,lambda2)
 
   contains
 
-  REAL(dp) FUNCTION evalYield_offdiag2p_kernel_F(k2,a1,Sxyz1_a1,lambda1,Sxyz2,lambda2)
+  DOUBLE PRECISION FUNCTION evalYield_offdiag2p_kernel_F(k2,a1,Sxyz1_a1,lambda1,Sxyz2,lambda2)
     implicit none
 
 !  .. Parameters ..
-    COMPLEX(8),ALLOCATABLE,INTENT(IN) :: Sxyz2(:,:,:)
+    COMPLEX(8),INTENT(IN) :: Sxyz2(:,:,:)
     COMPLEX(8)            ,INTENT(IN) :: Sxyz1_a1(:,:)
-    REAL(dp),  ALLOCATABLE,INTENT(IN) :: lambda1(:),lambda2(:)
-    REAL(dp)              ,INTENT(IN) :: k2
+    DOUBLE PRECISION,INTENT(IN) :: lambda1(:),lambda2(:)
+    DOUBLE PRECISION              ,INTENT(IN) :: k2
     INTEGER               ,INTENT(IN) :: a1
 !  .. Local arrays ..
     COMPLEX(8),ALLOCATABLE            :: Sxyz2_b1(:,:)
 !  .. Local scalars ..
     INTEGER                           :: a2,b1,b2,d1,d2
-    REAL(dp)                          :: lambda1_a1,y,dl1,dl2
+    DOUBLE PRECISION                          :: lambda1_a1,y,dl1,dl2
     COMPLEX(8)                        :: sAx,sAy,sAz,sBx,sBy,sBz
 
     d1 = UBOUND(Sxyz1_a1,2); d2 = UBOUND(Sxyz2,2) ! NOTE: 1-indexing

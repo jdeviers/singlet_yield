@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# Doesn't work yet 
 
 # f2py
 # -c                          -> compile 
@@ -8,4 +7,9 @@
 # -m eYield_f90               -> python module name
 # eYield_f90_standalone.f90   -> Fortran source file
 
-f2py -c --fcompiler='gnu95' -m eYield_f90 eYield_f90_standalone.f90 --f90flags=fopenmp
+
+# All array bounds are declared at compile time
+f2py --fcompiler='gnu95' --f90flags="-fopenmp" -c eYield_f90_staticbounds.f90 -m eYield_f90_staticbounds
+
+# Array bounds delared at: compile time for the function, runtime for the kernel
+f2py --fcompiler='gnu95' --f90flags="-fopenmp" -c eYield_f90.f90              -m eYield_f90
