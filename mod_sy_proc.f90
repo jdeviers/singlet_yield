@@ -67,10 +67,10 @@ MODULE mod_sy_proc
 
 		d1 = UBOUND(Sxyz1,3); d2 = UBOUND(Sxyz2,3) ! NOTE: 1-indexing
 		z = FLOOR( (d1*d2)/4. ); k2 = k*k
+		v        = 0.d0
 
 		!$OMP PARALLEL PRIVATE(thread_v) SHARED(v)
 			thread_v = 0.d0
-			v        = 0.d0
 
 			!$OMP DO
 			DO a1 = 1,d1
