@@ -14,9 +14,9 @@ DOUBLE PRECISION FUNCTION evalYield_offdiag2p(d1,d2,k,Sxyz1,lambda1,Sxyz2,lambda
 
   z = FLOOR( (d1*d2)/4. ); k2 = k*k
 
+  v        = 0.d0
   !$OMP PARALLEL PRIVATE(thread_v) SHARED(v)
     thread_v = 0.d0
-    v        = 0.d0
 
     !$OMP DO
     DO a1 = 1,d1

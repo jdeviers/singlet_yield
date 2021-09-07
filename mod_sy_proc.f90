@@ -147,7 +147,7 @@ MODULE mod_sy_proc
 				sBx = Sxyz2_b1(1,b2); sBy = Sxyz2_b1(2,b2); sBz = Sxyz2_b1(3,b2)
 				dl2 = lambda2(b1) - lambda2(b2)
 
-				y = y + ( ABS(sAx*sBx + sAy*sBy + sAz*sBz)**2. / (k2 + (dl1 + dl2)**2.) ) 
+				y = y + ( ABS(sAx*sBx + sAy*sBy + sAz*sBz)**2. / (k2 + (dl1 + dl2)**2.) )
 			END DO
 		END DO
 
