@@ -1,2 +1,0 @@
-To sample randomly the offdiag elements: 
- - random pernutation then normal code is not doable, because can't keep track of all pernutations to obtain correct lambdas.
