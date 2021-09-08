@@ -8,7 +8,7 @@ DOUBLE PRECISION FUNCTION evalYield_offdiag2p(d1,d2,k,Sxyz1,lambda1,Sxyz2,lambda
   DOUBLE PRECISION,         INTENT(IN) :: lambda1(d1),lambda2(d2)
   DOUBLE PRECISION,         INTENT(IN) :: k
 !  .. Local scalars ..
-  INTEGER                      :: a1,z
+  INTEGER(8)                     :: a1,z
   DOUBLE PRECISION                     :: v,thread_v,k2
 
 
@@ -46,7 +46,7 @@ DOUBLE PRECISION FUNCTION evalYield_offdiag2p(d1,d2,k,Sxyz1,lambda1,Sxyz2,lambda
 !  .. Local arrays ..
     COMPLEX(8)           :: Sxyz2_b1(3,d1)
 !  .. Local scalars ..
-    INTEGER               :: a2,b1,b2
+    INTEGER(8)              :: a2,b1,b2
     DOUBLE PRECISION              :: lambda1_a1,y,dl1,dl2
     COMPLEX(8)            :: sAx,sAy,sAz,sBx,sBy,sBz
 

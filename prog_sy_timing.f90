@@ -1,4 +1,5 @@
 PROGRAM prog_sy_timing
+	USE mod_rwfile
 	USE mod_sy_proc
 	implicit none
 
@@ -6,11 +7,11 @@ PROGRAM prog_sy_timing
 	REAL(dp)  ,ALLOCATABLE :: lambda1(:),lambda2(:)
 	REAL(dp)               :: v
 	REAL(dp),PARAMETER     :: k = 1. ! Initial value for k_f
-	INTEGER                :: N = 50  ! NxN S_(x,y,z) operators
-	INTEGER                :: i
+	INTEGER(8)             :: N = 50  ! NxN S_(x,y,z) operators
+	INTEGER(8)             :: i
 
 !	.. Timing vars ..
-	INTEGER                :: it0,it1,rate ! CPU_TIME() unsuitable for parallel runs
+	INTEGER(8)               :: it0,it1,rate ! CPU_TIME() unsuitable for parallel runs
 	REAL(dp)               :: t_1,t_2p,t_2s
 
 
@@ -80,42 +81,5 @@ PROGRAM prog_sy_timing
 
 	END DO
 	CLOSE(10)
-
-	contains
-
-	SUBROUTINE INIT_A_RND(N,A) ! Creates Hermitian matrix with random coeffs
-		implicit none
-
-!	.. Parameters ..
-		COMPLEX(8),INTENT(OUT)  :: A(:,:)
-		INTEGER,   INTENT(IN)   :: N
-!	.. Local arrays ..
-		REAL(dp),DIMENSION(N,N) :: Re,Im
-		INTEGER                 :: i,j
-
-		CALL RANDOM_NUMBER(Re)
-		CALL RANDOM_NUMBER(Im)
-		DO i=1,N
-			DO j=i,N
-				A(i,j) = COMPLEX( Re(i,j),Im(i,j) )
-				A(j,i) = CONJG( A(i,j) )
-			END DO
-		END DO
-
-	END SUBROUTINE INIT_A_RND
-
-	SUBROUTINE PRINT_CMAT(M)
-		implicit none
-
-!	.. Parameters ..
-		COMPLEX(8),INTENT(IN) :: M(:,:)
-!	.. Local scalars ..
-		INTEGER               :: i,j
-
-		DO i = 1,UBOUND(M,1)
-			WRITE(*,FMT_SCMPLX) (M(i,j), j=1,UBOUND(M,2))
-		END DO
-
-	END SUBROUTINE PRINT_CMAT
 
 END PROGRAM prog_sy_timing

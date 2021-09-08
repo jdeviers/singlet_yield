@@ -1,0 +1,4 @@
+Random sampling strategies:
+ - Make S products accessed at random, avoiding repetition with a LOGICAL table: requires a (N,N,N,N) tensor, so impractical.
+ - Shuffle one or both S, then use optimised access algo: avoids repetition, but requires reordering lambdas to for every product. Might be more advantageous than the next method, with the appropriate data structure.
+ - Make S products accessed at random, allowing repetition: track the running average at every step, or chunk of steps, and stop the algorithm once the singlet yield is stable enough (use a threshold). Can also print the number of actual iterations to estimate the proportion of double-counting. 

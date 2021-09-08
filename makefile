@@ -12,7 +12,7 @@ PROGRAM_time = sy_t
 PROGRAM_para = sy_p
 
 FC      = gfortran
-FCFLAGS = -fbacktrace -Wall -Wtabs -fcheck=all
+FCFLAGS = -fbacktrace -Wall -Wno-tabs -fcheck=all
 MPFLAGS = -fopenmp
 
 
@@ -24,6 +24,8 @@ $(PROGRAM_comp): $(OBJS)
 
 $(OBJS): %.o : %.f90 
 	$(FC) -c $< $(FCFLAGS) $(MPFLAGS)
+
+mod_sy_proc.o: mod_rwfile.o
 
 
 # Actions for make timing

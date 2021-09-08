@@ -1,18 +1,18 @@
-PROGRAM prog_sy
+PROGRAM rs_caller
 	USE mod_rwfile
-	USE mod_sy_proc
+	USE random_sampling
 	implicit none
-
+!
 	COMPLEX(8),ALLOCATABLE :: Sxyz1(:,:,:),Sxyz2(:,:,:)
 	REAL(dp)  ,ALLOCATABLE :: lambda1(:),lambda2(:)
 	REAL(dp)               :: v
-	REAL(dp),PARAMETER     :: k = 1.   ! Initial value for k_f
-	INTEGER, PARAMETER     :: N = 100  ! NxN S_(x,y,z) operators
+	REAL(dp),PARAMETER     :: k = 1., threshold = 0.00000000001   ! Initial value for k_f
+	INTEGER ,PARAMETER     :: N = 100  ! NxN S_(x,y,z) operators
 	INTEGER                :: i
-
+!
 !	.. Timing vars ..
 	INTEGER                :: it0,it1,rate ! CPU_TIME() unsuitable for parallel runs
-
+!
 !	.. Switch ..
 	LOGICAL,PARAMETER      :: WRITE_MAT = .FALSE.
 
@@ -52,11 +52,10 @@ PROGRAM prog_sy
 	END IF
 !
 ! ---------- SINGLET YIELD CALCULATION SECTION ----------
-!
 ! -- Calc singlet yield with parallelised second method
 	CALL SYSTEM_CLOCK(count_rate = rate)
 	CALL SYSTEM_CLOCK(it0)
-	v = evalYield_offdiag2p(k,Sxyz1,lambda1,Sxyz2,lambda2)
+	v = R_S(threshold,k,Sxyz1,lambda1,Sxyz2,lambda2)
 	CALL SYSTEM_CLOCK(it1)
 
 	WRITE(*,'(/,A,E10.3)') 'Parallelised offdiag method: v = ',v
@@ -66,4 +65,4 @@ PROGRAM prog_sy
 	DEALLOCATE(Sxyz1,Sxyz2)
 	DEALLOCATE(lambda1,lambda2)
 
-END PROGRAM prog_sy
+END PROGRAM rs_caller
