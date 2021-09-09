@@ -95,7 +95,6 @@ MODULE mod_sy_proc
 		z = FLOOR( (d1*d2)/4. ); k2 = k*k; v = 0.d0
 		DO a1 = 1,d1
 			v = v + evalYield_offdiag2p_kernel_F( k2,INT(a1),Sxyz1(:,:,a1),lambda1,Sxyz2,lambda2 )
-			WRITE(10,*) (2 * v * k2) / ( (a1*d2)/4. ) ! Write running average of the singlet yield: pyramid shaped so can't use this access scheme to compute a running average.
 		END DO
 		v = 2 * (v * k2 / z)
 		evalYield_offdiag2p_serial = v
@@ -145,7 +144,6 @@ MODULE mod_sy_proc
 		END DO
 
 		DEALLOCATE(Sxyz2_b1)
-		WRITE(11,*) y
 		evalYield_offdiag2p_kernel_F = y
 
 	END FUNCTION evalYield_offdiag2p_kernel_F

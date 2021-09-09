@@ -1,5 +1,4 @@
-MODULE random_sampling ! Can also be called from prog_sy_parallel
-  USE mod_rwfile
+MODULE random_sampling
   implicit none
 
   DOUBLE PRECISION :: last_ravg   ! ravg = running average
@@ -9,21 +8,22 @@ MODULE random_sampling ! Can also be called from prog_sy_parallel
 
 ! ----------
 
-  REAL(dp) FUNCTION R_S(threshold,k,Sxyz1,lambda1,Sxyz2,lambda2) 
+   DOUBLE PRECISION FUNCTION R_S(threshold,k,Sxyz1,lambda1,Sxyz2,lambda2) 
     USE OMP_LIB
 
 !	.. Arguments ..
-		COMPLEX(8),ALLOCATABLE,INTENT(IN) :: Sxyz1(:,:,:),Sxyz2(:,:,:)
-		REAL(dp),  ALLOCATABLE,INTENT(IN) :: lambda1(:),lambda2(:)
-		REAL(dp)              ,INTENT(IN) :: k,threshold
+	COMPLEX(8),      ALLOCATABLE,INTENT(IN) :: Sxyz1(:,:,:),Sxyz2(:,:,:)
+	DOUBLE PRECISION,ALLOCATABLE,INTENT(IN) :: lambda1(:),lambda2(:)
+	DOUBLE PRECISION,            INTENT(IN) :: k,threshold
 !	.. Local scalars ..
-		INTEGER(8)           :: N,Z,thread_count,current_rcount,a
+	INTEGER(8)           :: N,Z,thread_count,current_rcount,a
     INTEGER(16)          :: N_max
     INTEGER              :: a1,a2,b1,b2,thread_id
-		REAL(dp)             :: thread_sum,current_rsum, current_ravg,last_ravg
-    REAL(dp)             :: dla,dlb
+	DOUBLE PRECISION     :: thread_sum,current_rsum, current_ravg,last_ravg
+    DOUBLE PRECISION     :: dla,dlb
+    LOGICAL              :: KEEP_GOING = .TRUE.
 !	.. Local tensors ..
-    REAL(dp),ALLOCATABLE :: indices(:,:)
+    DOUBLE PRECISION,ALLOCATABLE :: indices(:,:)
 
 
     N = UBOUND(Sxyz1,2); Z = FLOOR( UBOUND(Sxyz1,1)*UBOUND(Sxyz2,2)/4. )
@@ -33,7 +33,7 @@ MODULE random_sampling ! Can also be called from prog_sy_parallel
     ALLOCATE( indices(N*N,4) )
 
     !$OMP PARALLEL PRIVATE(thread_id,thread_count,thread_sum) SHARED(indices,current_rcount,current_rsum,current_ravg)
-    DO ! Threshold condition on diff b/w current and previous cumulated average
+    DO WHILE (KEEP_GOING) ! Threshold condition on diff b/w current and previous cumulated average
       thread_id = OMP_GET_THREAD_NUM()
       ! Thread 0 regenerates list of indices to sample 
       IF (thread_id .EQ. 0) THEN
@@ -68,7 +68,9 @@ MODULE random_sampling ! Can also be called from prog_sy_parallel
           WRITE(10,*) current_ravg,current_rsum,current_rcount
         END IF
 
-        IF ( ABS(current_ravg - last_ravg) .LE. threshold) EXIT ! All threads exit, not just 0 -- not sure it makes a difference
+        IF ( ABS(current_ravg - last_ravg) .LE. threshold) THEN
+            KEEP_GOING = .FALSE.
+        END IF
         
         IF (thread_id .EQ. 0) THEN
           last_ravg = current_ravg
@@ -87,10 +89,10 @@ MODULE random_sampling ! Can also be called from prog_sy_parallel
 
 ! ----------
 
-  REAL(dp) FUNCTION Ps2_kernel(S1,S2,k,dla,dlb)
+   DOUBLE PRECISION FUNCTION Ps2_kernel(S1,S2,k,dla,dlb)
 
-    COMPLEX(8) :: S1(3),S2(3)
-    REAL(dp)   :: k,dla,dlb
+    COMPLEX(8)       :: S1(3),S2(3)
+    DOUBLE PRECISION :: k,dla,dlb
 
     Ps2_kernel = ( ABS(S1(1)*S2(1) + S1(2)*S2(2) + S1(3)*S2(3))**2. / (k*k + (dla + dlb)**2.) )
 
