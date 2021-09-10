@@ -7,7 +7,7 @@ PROGRAM rs_caller
 	REAL(dp)  ,ALLOCATABLE :: lambda1(:),lambda2(:)
 	REAL(dp)               :: v
 	REAL(dp),PARAMETER     :: k = 1., threshold = 0.00000000001   ! Initial value for k_f
-	INTEGER ,PARAMETER     :: N = 1000  ! NxN S_(x,y,z) operators
+	INTEGER ,PARAMETER     :: N = 250  ! NxN S_(x,y,z) operators
 	INTEGER                :: i,j
 !
 !	.. Timing vars ..
@@ -29,16 +29,12 @@ PROGRAM rs_caller
 		DO i=1,3
 			CALL INIT_A_RND(N,Sxyz1(i,:,:))
 			CALL INIT_A_RND(N,Sxyz2(i,:,:))
+			DO j=1,N
+				Sxyz1(i,j,j) = 10.d0 * Sxyz1(i,j,j)
+				Sxyz2(i,j,j) = 10.d0 * Sxyz2(i,j,j)
+			END DO
 		END DO
 	END IF
-!
-! -- Mult diagonal elements by 10 for a more realistic density matrix
-	DO i=1,3
-		DO j=1,N
-			Sxyz1(i,j,j) = 10.d0 * Sxyz1(i,j,j)
-			Sxyz2(i,j,j) = 10.d0 * Sxyz2(i,j,j)
-		END DO
-	END DO
 !
 ! -- If lambda1 and 2 files are provided as arguments, read them
 	IF ( IARGC().GT.0 ) THEN

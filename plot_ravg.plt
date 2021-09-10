@@ -1,7 +1,7 @@
 set term pdfcairo
 
 set output 'offdiag_ravg.pdf'
-set title 'Random access: running average of the singlet yield'
+set title 'Random access: normalised running average of the singlet yield'
 plot 'fort.10' u :1 w lines t 'ravg'
 
 set output 'offdiag_rsum.pdf'

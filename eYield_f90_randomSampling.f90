@@ -8,32 +8,32 @@ MODULE random_sampling
 
 ! ----------
 
-   DOUBLE PRECISION FUNCTION R_S(threshold,k,Sxyz1,lambda1,Sxyz2,lambda2) 
+  DOUBLE PRECISION FUNCTION R_S(d1,d2,N_max,threshold,k,Sxyz1,lambda1,Sxyz2,lambda2) 
     USE OMP_LIB
 
 !	.. Arguments ..
-	COMPLEX(8),      ALLOCATABLE,INTENT(IN) :: Sxyz1(:,:,:),Sxyz2(:,:,:)
-	DOUBLE PRECISION,ALLOCATABLE,INTENT(IN) :: lambda1(:),lambda2(:)
-	DOUBLE PRECISION,            INTENT(IN) :: k,threshold
+	  COMPLEX(8),      INTENT(IN) :: Sxyz1(3,d1,d1),Sxyz2(3,d2,d2)
+	  DOUBLE PRECISION,INTENT(IN) :: lambda1(d1),lambda2(d2)
+	  DOUBLE PRECISION,INTENT(IN) :: k,threshold
+    INTEGER(8),      INTENT(IN) :: d1,d2
+    INTEGER(16),     INTENT(IN) :: N_max
+
 !	.. Local scalars ..
-	INTEGER(8)           :: N,Z,thread_count,current_rcount,a
-    INTEGER(16)          :: N_max
-    INTEGER              :: a1,a2,b1,b2,thread_id
-	DOUBLE PRECISION     :: thread_sum,current_rsum, current_ravg,last_ravg
-    DOUBLE PRECISION     :: dla,dlb
-    LOGICAL              :: KEEP_GOING = .TRUE.
+	  INTEGER(8)       :: N,Z,thread_count,current_rcount,a
+    INTEGER          :: a1,a2,b1,b2,thread_id
+	  DOUBLE PRECISION :: thread_sum,current_rsum, current_ravg,last_ravg
+    DOUBLE PRECISION :: dla,dlb
+    LOGICAL          :: KEEP_GOING = .TRUE.
 !	.. Local tensors ..
-    DOUBLE PRECISION,ALLOCATABLE :: indices(:,:)
+    DOUBLE PRECISION :: indices(d1*d2,4)
 
 
-    N = UBOUND(Sxyz1,2); Z = FLOOR( UBOUND(Sxyz1,1)*UBOUND(Sxyz2,2)/4. )
+    N = UBOUND(Sxyz1,2); Z = FLOOR( d1*d2/4. )
     current_rcount = 0; current_rsum = 0.d0; last_ravg = 0.d0
     thread_count = 0; thread_sum = 0.d0
 
-    ALLOCATE( indices(N*N,4) )
-
-    !$OMP PARALLEL PRIVATE(thread_id,thread_count,thread_sum) SHARED(indices,current_rcount,current_rsum,current_ravg)
-    DO WHILE (KEEP_GOING) ! Threshold condition on diff b/w current and previous cumulated average
+    !$OMP PARALLEL PRIVATE(thread_id,thread_count,thread_sum) SHARED(indices,current_rcount,current_rsum,current_ravg,KEEP_GOING)
+    DO WHILE (KEEP_GOING .AND. current_rcount.LE.N_max) ! Threshold condition on diff b/w current and previous cumulated average
       thread_id = OMP_GET_THREAD_NUM()
       ! Thread 0 regenerates list of indices to sample 
       IF (thread_id .EQ. 0) THEN
@@ -79,8 +79,6 @@ MODULE random_sampling
 
     END DO
     !$OMP END PARALLEL
-    DEALLOCATE(indices) 
-
 
     ! Final normalisation and return:
     R_S = (current_rsum / current_rcount) / (k*k / Z)
@@ -89,7 +87,7 @@ MODULE random_sampling
 
 ! ----------
 
-   DOUBLE PRECISION FUNCTION Ps2_kernel(S1,S2,k,dla,dlb)
+  DOUBLE PRECISION FUNCTION Ps2_kernel(S1,S2,k,dla,dlb)
 
     COMPLEX(8)       :: S1(3),S2(3)
     DOUBLE PRECISION :: k,dla,dlb
