@@ -27,18 +27,17 @@ echo -e "  * 1 to compile rs_caller;\n  * 2 to clean rs_caller files;\n  * 3 to 
 read -p "Type here: " y
 
 case $y in
-  1) compile
-     ;;
-  2) clean
-     ;;
+  1) compile ;;
+
+  2) clean ;;
+
   3) clean 
      compile
-     ./sy_rs
-     ;;
-  4) plot
-     ;;
+     ./sy_rs ;;
+
+  4) plot ;;
+
   *) echo "Wrong input" 
-     exec "${Scriptloc}" 
-     ;;
+     exec "${Scriptloc}" ;;
 esac
 

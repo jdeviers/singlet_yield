@@ -7,12 +7,12 @@ PROGRAM prog_sy_timing
 	REAL(dp)  ,ALLOCATABLE :: lambda1(:),lambda2(:)
 	REAL(dp)               :: v
 	REAL(dp),PARAMETER     :: k = 1. ! Initial value for k_f
-	INTEGER(8)             :: N = 50  ! NxN S_(x,y,z) operators
+	INTEGER(8)             :: N = 250  ! NxN S_(x,y,z) operators
 	INTEGER(8)             :: i
 
 !	.. Timing vars ..
 	INTEGER(8)               :: it0,it1,rate ! CPU_TIME() unsuitable for parallel runs
-	REAL(dp)               :: t_1,t_2p,t_2s
+	REAL(dp)                 :: t_1,t_2p,t_2s
 
 
 	OPEN(10,file='timings.dat',status='unknown',action='write',position='append')

@@ -8,6 +8,7 @@ def evalYield(k, Sxyz1, lambda1, Sxyz2, lambda2):
     d2 = Sxyz2.shape[-1]
     z = d1 * d2 // 4
     v = 0.0
+    counter = 0
     k2 = k*k
     for a1 in range(d1):
         for a2 in range(d1):
@@ -17,8 +18,10 @@ def evalYield(k, Sxyz1, lambda1, Sxyz2, lambda2):
                 for b2 in range(d2):
                     dl2 = lambda2[b1] - lambda2[b2]
                     sB = Sxyz2[:,b1,b2]
+                    counter += 1
                     v += np.abs(sA[0]*sB[0] + sA[1]*sB[1] + sA[2]*sB[2])**2 / (k2 + (dl1 + dl2)**2)
     v *= k2/z
+    print(counter)
     return 1/4 + v
  
 def evalYield_offdiag2p_kernel_F(k2, a1, Sxyz1_a1, lambda1, Sxyz2, lambda2):

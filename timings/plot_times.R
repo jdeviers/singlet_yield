@@ -2,7 +2,7 @@
 
 library(ggplot2)
 
-df <- read.table("timings.dat", sep = "", header = FALSE)
+df <- read.table("timings_ISCA_32threads_zoom.dat", sep = "", header = FALSE)
 
 names(df) <- c('N','m1','m2s','m2p')
 

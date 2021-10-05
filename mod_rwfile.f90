@@ -44,11 +44,11 @@ MODULE mod_rwfile
         INTEGER,               INTENT(IN)  :: N,ARG_ID
 !
 !   .. Local tensors ..
-        REAL(dp),ALLOCATABLE            :: tmpSxyz(:,:,:)
+        REAL(dp),ALLOCATABLE               :: tmpSxyz(:,:,:)
 !
 !   .. Local scalars ..
-        INTEGER                         :: i,j,k,io
-        CHARACTER(LEN=40)               :: infile
+        INTEGER                            :: i,j,k,io
+        CHARACTER(LEN=40)                  :: infile
 
 		ALLOCATE(tmpSxyz(3,N,2*N))
 		CALL GETARG(ARG_ID,infile)
@@ -81,8 +81,8 @@ MODULE mod_rwfile
         INTEGER,             INTENT(IN)  :: N,ARG_ID
 !
 !   .. Local scalars ..
-        INTEGER                         :: i,io
-        CHARACTER(LEN=40)               :: infile
+        INTEGER                          :: i,io
+        CHARACTER(LEN=40)                :: infile
 
         ALLOCATE(L(N))
 		CALL GETARG(ARG_ID,infile)
@@ -101,11 +101,11 @@ MODULE mod_rwfile
 
 !   .. Arguments ..
         COMPLEX(8),ALLOCATABLE,INTENT(IN) :: Sxyz(:,:,:)
-        CHARACTER(LEN=*),      INTENT(IN)  :: outfile
-        INTEGER,               INTENT(IN)  :: N
+        CHARACTER(LEN=*),      INTENT(IN) :: outfile
+        INTEGER,               INTENT(IN) :: N
 !
 !   .. Local scalars ..
-        INTEGER                            :: i,j
+        INTEGER                           :: i,j
         
         OPEN(10,file=outfile,status='UNKNOWN',action='WRITE')
 		DO i=1,3
@@ -124,11 +124,11 @@ MODULE mod_rwfile
 
 !   .. Arguments ..
         REAL(dp),ALLOCATABLE,INTENT(IN) :: L(:)
-        CHARACTER(LEN=*),    INTENT(IN)  :: outfile
-        INTEGER,             INTENT(IN)  :: N
+        CHARACTER(LEN=*),    INTENT(IN) :: outfile
+        INTEGER,             INTENT(IN) :: N
 !
 !   .. Local scalars ..
-        INTEGER                          :: i
+        INTEGER                         :: i
 
 		OPEN(10,file=outfile,status='UNKNOWN',action='WRITE')
 		DO i=1,N

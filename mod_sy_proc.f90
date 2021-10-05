@@ -58,7 +58,7 @@ MODULE mod_sy_proc
 
 
 		d1 = UBOUND(Sxyz1,3); d2 = UBOUND(Sxyz2,3) ! NOTE: 1-indexing
-		z = FLOOR( (d1*d2)/4. ); k2 = k*k
+		z = FLOOR( (d1*d2)/4.d0 ); k2 = k*k
 		v = 0.d0
 
 		!$OMP PARALLEL PRIVATE(thread_v) SHARED(v)
@@ -139,7 +139,7 @@ MODULE mod_sy_proc
 				sBx = Sxyz2_b1(1,b2); sBy = Sxyz2_b1(2,b2); sBz = Sxyz2_b1(3,b2)
 				dl2 = lambda2(b1) - lambda2(b2)
 
-				y = y + ( ABS(sAx*sBx + sAy*sBy + sAz*sBz)**2. / (k2 + (dl1 + dl2)**2.) )
+				y = y + ( ABS(sAx*sBx + sAy*sBy + sAz*sBz)**2.d0 / (k2 + (dl1 + dl2)**2.d0) )
 			END DO
 		END DO
 
