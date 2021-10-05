@@ -8,3 +8,7 @@ Scaling:
  - full offdiag sampling: generate a sum over ALL matrix products, then finally scale by (k2/Z).
  - opt offdiag sampling: generate a sum over half the matrix products, then scale by (2*k2/Z).
  - RS offdiag sampling: generate a running average (rsum/rcount), extrapolate to full sum using: sum=nb.mat.products*ravg where nb.mat.products=(d1**2.d0 * d2**2.d0)-d1*d2, and eventually scale by (k2/Z)
+
+TODO: 
+ - Organise all into folder. Make separate makefiles.
+ - Dynamic and static kernels are redundant. Delete at least one of them. Maybe neither is even useful.

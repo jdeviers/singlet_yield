@@ -8,7 +8,7 @@ DOUBLE PRECISION FUNCTION evalYield_offdiag2p(d1,d2,k,Sxyz1,lambda1,Sxyz2,lambda
   DOUBLE PRECISION,INTENT(IN) :: lambda1(d1),lambda2(d2)
   DOUBLE PRECISION              ,INTENT(IN) :: k
 !  .. Local scalars ..
-  INTEGER                           :: a1,z
+  INTEGER(8)                          :: a1,z
   DOUBLE PRECISION                          :: v,thread_v,k2
 
 
@@ -21,7 +21,7 @@ DOUBLE PRECISION FUNCTION evalYield_offdiag2p(d1,d2,k,Sxyz1,lambda1,Sxyz2,lambda
 
     !$OMP DO
     DO a1 = 1,d1
-      thread_v = thread_v + evalYield_offdiag2p_kernel_F( k2,INT(a1),Sxyz1(:,:,a1),lambda1,Sxyz2,lambda2 )
+      thread_v = thread_v + evalYield_offdiag2p_kernel_F( k2,INT(a1,KIND=8),Sxyz1(:,:,a1),lambda1,Sxyz2,lambda2 )
     END DO
     !$OMP END DO
 
@@ -43,11 +43,11 @@ DOUBLE PRECISION FUNCTION evalYield_offdiag2p(d1,d2,k,Sxyz1,lambda1,Sxyz2,lambda
     COMPLEX(8)            ,INTENT(IN) :: Sxyz1_a1(:,:)
     DOUBLE PRECISION,INTENT(IN) :: lambda1(:),lambda2(:)
     DOUBLE PRECISION              ,INTENT(IN) :: k2
-    INTEGER               ,INTENT(IN) :: a1
+    INTEGER(8)              ,INTENT(IN) :: a1
 !  .. Local arrays ..
     COMPLEX(8),ALLOCATABLE            :: Sxyz2_b1(:,:)
 !  .. Local scalars ..
-    INTEGER                           :: a2,b1,b2,d1,d2
+    INTEGER(8)                          :: a2,b1,b2,d1,d2
     DOUBLE PRECISION                          :: lambda1_a1,y,dl1,dl2
     COMPLEX(8)                        :: sAx,sAy,sAz,sBx,sBy,sBz
 

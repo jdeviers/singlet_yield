@@ -1,101 +1,139 @@
-MODULE random_sampling
+MODULE evalYield_randomAccess
   implicit none
+! -- This module is meant for having python bindings.
+! -- It accepts TRANSPOSED Sxyzi, i.e of dim (di,di,3).
+! -- Unlike the random_sampling program, which has (3,di,di).
 
-  DOUBLE PRECISION :: last_ravg   ! ravg = running average
-  INTEGER(8)       :: last_rcount ! rcount = running count
+
+! -- Defines compiler-independent data types.
+
 
   contains
 
-! ----------
-
-  DOUBLE PRECISION FUNCTION R_S(d1,d2,N_max,threshold,k,Sxyz1,lambda1,Sxyz2,lambda2) 
-    USE OMP_LIB
+  DOUBLE PRECISION FUNCTION offdiag_random(k,Sxyz1T,lambda1,Sxyz2T,lambda2,nr_draws)
+!
+! -- This standalone R_S corresponds to evalYield_offdiag_random in singlet_yield_noInter_eigenbasis.ipynb.
+! -- Its returned value is scaled in the notebook, not in the return statement as in random_sampling.f90.
+! -- It is normal that R_S makes no mention of N_max and is very small.
+! -- Caution: this program will likely overshoot nr_draws, by a maximum of (d1*d2)-1 draws.
+!
+  	USE OMP_LIB
 
 !	.. Arguments ..
-	  COMPLEX(8),      INTENT(IN) :: Sxyz1(3,d1,d1),Sxyz2(3,d2,d2)
-	  DOUBLE PRECISION,INTENT(IN) :: lambda1(d1),lambda2(d2)
-	  DOUBLE PRECISION,INTENT(IN) :: k,threshold
-    INTEGER(8),      INTENT(IN) :: d1,d2
-    INTEGER(16),     INTENT(IN) :: N_max
-
-!	.. Local scalars ..
-	  INTEGER(8)       :: N,Z,thread_count,current_rcount,a
-    INTEGER          :: a1,a2,b1,b2,thread_id
-	  DOUBLE PRECISION :: thread_sum,current_rsum, current_ravg,last_ravg
-    DOUBLE PRECISION :: dla,dlb
-    LOGICAL          :: KEEP_GOING = .TRUE.
+  	COMPLEX(8),		 INTENT(IN) :: Sxyz1T(:,:,:),Sxyz2T(:,:,:) ! dim: (di,di,3)
+  	DOUBLE PRECISION,INTENT(IN) :: lambda1(:),lambda2(:)       ! dim: (di)
+  	DOUBLE PRECISION,INTENT(IN) :: k
+  	INTEGER(8),		 INTENT(IN) :: nr_draws
+!	.. Sampling vars ..
+  	INTEGER(8)		 :: a
+!	.. Params ..
+  	INTEGER(8)		 :: d1,d2,Z
+  	DOUBLE PRECISION :: k2
+!	.. OMP vars ..
+  	INTEGER(4)		 :: thread_id
+  	INTEGER(8)		 :: thread_count
+  	DOUBLE PRECISION :: thread_sum
+!	.. Scalars .. 
+  	INTEGER(4)		 :: a1,a2,b1,b2
+  	INTEGER(8)		 :: current_rcount
+  	DOUBLE PRECISION :: dla,dlb
+  	DOUBLE PRECISION :: current_rsum
 !	.. Local tensors ..
-    DOUBLE PRECISION :: indices(d1*d2,4)
+  	DOUBLE PRECISION,ALLOCATABLE :: indices(:,:)
 
 
-    N = UBOUND(Sxyz1,2); Z = FLOOR( d1*d2/4. )
-    current_rcount = 0; current_rsum = 0.d0; last_ravg = 0.d0
-    thread_count = 0; thread_sum = 0.d0
+  	d1 = UBOUND(Sxyz1T,1); d2 = UBOUND(Sxyz2T,1)
+  	Z = FLOOR( (d1*d2)/4.d0 )
+  	k2 = k*k
 
-    !$OMP PARALLEL PRIVATE(thread_id,thread_count,thread_sum) SHARED(indices,current_rcount,current_rsum,current_ravg,KEEP_GOING)
-    DO WHILE (KEEP_GOING .AND. current_rcount.LE.N_max) ! Threshold condition on diff b/w current and previous cumulated average
-      thread_id = OMP_GET_THREAD_NUM()
-      ! Thread 0 regenerates list of indices to sample 
-      IF (thread_id .EQ. 0) THEN
-        CALL RANDOM_NUMBER(indices)
-        indices = 1_4+indices*(N-1_4) ! Prevents an index to be =0
-      END IF
-        
-      !$OMP DO
-      DO a = 1,N*N
-        a1 = INT(indices(a,1)); a2 = INT(indices(a,2))
-        b1 = INT(indices(a,3)); b2 = INT(indices(a,4))
-        dla = lambda1(a1) - lambda1(a2); dlb = lambda2(b1) - lambda2(b2)
+  	current_rcount = 0; current_rsum = 0.d0
+  	thread_count = 0; thread_sum = 0.d0
 
-        ! Skip diagonal elements
-        IF ( a1.EQ.a2 ) THEN
-            IF ( b1.EQ.b2 ) CYCLE ! Nested IF avoid performing too many checks at every step
-        END IF
+  	ALLOCATE( indices(d1*d2,4) )
 
-        ! -- Update the running sum of Ps products
-        thread_sum = thread_sum + Ps2_kernel(Sxyz1(:,a1,a2),Sxyz2(:,b1,b2),k,dla,dlb)
-        ! -- Update the count of actually explored combination (thread_count .LE. N)
-        thread_count = thread_count+1
-      END DO
-      !$OMP END DO
+  	DO WHILE (current_rcount .LT. nr_draws)! This setup will most likely overshoot nr_draws
+ 
+  	  CALL RANDOM_NUMBER(indices)
+  	  indices = indices*(d1-1_4)+1_4 ! Prevents an index to be =0
+				
+  	  !$OMP PARALLEL                                    &
+	  !$OMP PRIVATE(thread_id,thread_count,thread_sum)  &
+	  !$OMP SHARED(indices,current_rcount,current_rsum)
+  		
+	  thread_sum = 0.d0; thread_count = 0.d0 ! Reset the threadwise sums and counts				
 
-      !$OMP CRITICAL
-        current_rsum   = current_rsum   + thread_sum
-        current_rcount = current_rcount + thread_count
+	  !$OMP DO
+  	  DO a = 1,UBOUND(indices,1)
 
-        IF (thread_id .EQ. 0) THEN
-          current_ravg = current_rsum/current_rcount
-          WRITE(10,*) current_ravg,current_rsum,current_rcount
-        END IF
+	  	a1 = INT(indices(a,1)); a2 = INT(indices(a,2))
+	  	b1 = INT(indices(a,3)); b2 = INT(indices(a,4))
+	  	dla = lambda1(a1) - lambda1(a2); dlb = lambda2(b1) - lambda2(b2)
 
-        IF ( ABS(current_ravg - last_ravg) .LE. threshold) THEN
-            KEEP_GOING = .FALSE.
-        END IF
-        
-        IF (thread_id .EQ. 0) THEN
-          last_ravg = current_ravg
-        END IF
-      !$OMP END CRITICAL
+		IF ( a1.EQ.a2 ) THEN
+		  IF ( b1.EQ.b2 ) CYCLE
+		END IF
 
-    END DO
-    !$OMP END PARALLEL
+  		thread_sum   = thread_sum + Ps2_kernel(Sxyz1T(a1,a2,:),Sxyz2T(b1,b2,:),k2,dla,dlb)
+  		thread_count = thread_count+1_8
+  	  END DO
+  	  !$OMP END DO
 
-    ! Final normalisation and return:
-    R_S = (current_rsum / current_rcount) / (k*k / Z)
+  	  !$OMP CRITICAL
+  		current_rsum   = current_rsum	+ thread_sum
+  		current_rcount = current_rcount + thread_count
+	  !$OMP END CRITICAL
 
-  END FUNCTION R_S
+  	  !$OMP END PARALLEL
+
+  	END DO
+  	DEALLOCATE(indices) 
+
+  	! Final normalisation and return:
+  	offdiag_random = (current_rsum/current_rcount) * k2 / Z 
+
+  END FUNCTION offdiag_random
 
 ! ----------
 
-  DOUBLE PRECISION FUNCTION Ps2_kernel(S1,S2,k,dla,dlb)
+  DOUBLE PRECISION FUNCTION diag_ordered(k,Sxyz1T,Sxyz2T)
+	USE OMP_LIB
 
-    COMPLEX(8)       :: S1(3),S2(3)
-    DOUBLE PRECISION :: k,dla,dlb
+!	.. Arguments ..
+  	COMPLEX(8),		 INTENT(IN) :: Sxyz1T(:,:,:),Sxyz2T(:,:,:) ! dim: (di,di,3)
+  	DOUBLE PRECISION,INTENT(IN) :: k
+!	.. Sampling vars ..
+	INTEGER(8)       :: a1,b1
+!	.. Params ..
+  	INTEGER(8)		 :: d1,d2,Z
+  	DOUBLE PRECISION :: k2
+!	.. Scalars ..
+	DOUBLE PRECISION :: rsum
 
-    Ps2_kernel = ( ABS(S1(1)*S2(1) + S1(2)*S2(2) + S1(3)*S2(3))**2. / (k*k + (dla + dlb)**2.) )
+  	d1 = UBOUND(Sxyz1T,1); d2 = UBOUND(Sxyz2T,1)
+  	Z = FLOOR( (d1*d2)/4.d0 )
+  	k2 = k*k
 
+	rsum = 0.d0
+
+	DO a1 = 1,d1
+	  DO b1 = 1,d2
+        rsum = rsum + Ps2_kernel( Sxyz1T(a1,a1,:),Sxyz2T(b1,b1,:),k2,0.d0,0.d0 )
+	  END DO
+    END DO
+
+    diag_ordered = 0.25d0 + (rsum / Z)
+
+  END FUNCTION diag_ordered
+! ----------
+
+  DOUBLE PRECISION FUNCTION Ps2_kernel(S1,S2,k2,dla,dlb)
+
+  	COMPLEX(8)		 :: S1(3),S2(3)
+  	DOUBLE PRECISION :: k2,dla,dlb
+
+  	Ps2_kernel = ( ABS(S1(1)*S2(1) + S1(2)*S2(2) + S1(3)*S2(3))**2.d0 / (k2 + (dla + dlb)**2.d0) )
   END FUNCTION Ps2_kernel
 
 ! ----------
 
-END MODULE random_sampling
+END MODULE evalYield_randomAccess

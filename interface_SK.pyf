@@ -1,0 +1,21 @@
+!    -*- f90 -*-
+! Note: the context of this file is case sensitive.
+
+python module py3_f90_staticKernel ! in 
+    interface  ! in :py3_f90_staticKernel
+        function evalyield_offdiag2p(d1,d2,k,sxyz1,lambda1,sxyz2,lambda2) ! in :py3_f90_staticKernel:eYield_f90_staticKernel.f90
+            use omp_lib
+            integer, optional,intent(in),check(shape(sxyz1,1)==d1),depend(sxyz1) :: d1=shape(sxyz1,1)
+            integer, optional,intent(in),check(shape(sxyz2,1)==d2),depend(sxyz2) :: d2=shape(sxyz2,1)
+            double precision intent(in) :: k
+            complex(kind=8) dimension(3,d1,d1),intent(in) :: sxyz1
+            double precision dimension(d1),intent(in),depend(d1) :: lambda1
+            complex(kind=8) dimension(3,d2,d2),intent(in) :: sxyz2
+            double precision dimension(d2),intent(in),depend(d2) :: lambda2
+            double precision :: evalyield_offdiag2p
+        end function evalyield_offdiag2p
+    end interface 
+end python module py3_f90_staticKernel
+
+! This file was auto-generated with f2py (version:2).
+! See http://cens.ioc.ee/projects/f2py2e/

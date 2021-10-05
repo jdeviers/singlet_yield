@@ -5,6 +5,7 @@ MODULE mod_sy_proc
 	contains
 
 ! ----------
+
 	REAL(dp) FUNCTION evalYield(k,Sxyz1,lambda1,Sxyz2,lambda2)
 		implicit none
 
@@ -43,7 +44,93 @@ MODULE mod_sy_proc
 		evalYield = 0.25d0 + v
 
 	END FUNCTION evalYield
+
 ! ----------
+
+  DOUBLE PRECISION FUNCTION diag_ordered_sq(k,Sxyz1T,Sxyz2T)
+!
+!	.. Arguments ..
+  	COMPLEX(8),		 INTENT(IN) :: Sxyz1T(:,:,:),Sxyz2T(:,:,:) ! dim: (3,di,di)
+  	DOUBLE PRECISION,INTENT(IN) :: k
+!	.. Sampling vars ..
+	INTEGER(8)       :: a1,b1
+!	.. Params ..
+  	INTEGER(8)		 :: d1,d2,Z
+  	DOUBLE PRECISION :: k2
+!	.. Scalars ..
+	DOUBLE PRECISION :: curr_sum
+
+  	d1 = UBOUND(Sxyz1T,3); d2 = UBOUND(Sxyz2T,3)
+  	Z = FLOOR( (d1*d2)/4.d0 )
+  	k2 = k*k
+
+	curr_sum = 0.d0
+
+	DO a1 = 1,d1
+	  DO b1 = 1,d2
+        curr_sum = curr_sum + Ps2_kernel(Sxyz1T(:,a1,a1),Sxyz2T(:,b1,b1),k2,0.d0,0.d0)
+	  END DO
+    END DO
+
+    diag_ordered_sq = 0.25d0 + (curr_sum / Z)
+
+  END FUNCTION diag_ordered_sq
+
+! ----------
+
+  DOUBLE PRECISION FUNCTION diag_ordered_p(k,Sxyz1T,Sxyz2T)
+	USE OMP_LIB
+!
+!	.. Arguments ..
+  	COMPLEX(8),		 INTENT(IN) :: Sxyz1T(:,:,:),Sxyz2T(:,:,:) ! dim: (3,di,di)
+  	DOUBLE PRECISION,INTENT(IN) :: k
+!	.. Sampling vars ..
+	INTEGER(8)       :: a1,b1
+!	.. Params ..
+  	INTEGER(8)		 :: d1,d2,Z
+  	DOUBLE PRECISION :: k2
+!	.. OMP vars ..
+  	DOUBLE PRECISION :: thread_sum
+!	.. Scalars ..
+	DOUBLE PRECISION :: curr_sum
+
+  	d1 = UBOUND(Sxyz1T,3); d2 = UBOUND(Sxyz2T,3)
+  	Z = FLOOR( (d1*d2)/4.d0 )
+  	k2 = k*k
+
+	thread_sum = 0.d0; curr_sum = 0.d0
+
+    !$OMP PARALLEL PRIVATE(thread_sum) SHARED(curr_sum)
+	  !$OMP DO
+	  DO a1 = 1,d1
+		DO b1 = 1,d2
+          thread_sum = thread_sum + Ps2_kernel(Sxyz1T(:,a1,a1),Sxyz2T(:,b1,b1),k2,0.d0,0.d0)
+		END DO
+      END DO
+	  !$OMP END DO
+
+	  !$OMP CRITICAL
+        curr_sum = curr_sum + thread_sum
+	  !$OMP END CRITICAL
+
+	!$OMP END PARALLEL
+
+    diag_ordered_p = 0.25d0 + (curr_sum / Z)
+
+  END FUNCTION diag_ordered_p
+
+! ----------
+
+    DOUBLE PRECISION FUNCTION Ps2_kernel(S1,S2,k2,dla,dlb)
+
+  	  COMPLEX(8)		 :: S1(3),S2(3)
+  	  DOUBLE PRECISION :: k2,dla,dlb
+
+  	  Ps2_kernel = ( ABS(S1(1)*S2(1) + S1(2)*S2(2) + S1(3)*S2(3))**2.d0 / (k2 + (dla + dlb)**2.d0) )
+    END FUNCTION Ps2_kernel
+
+! ----------
+
 	REAL(dp) FUNCTION evalYield_offdiag2p(k,Sxyz1,lambda1,Sxyz2,lambda2)
 		USE OMP_LIB
 		implicit none
@@ -79,7 +166,9 @@ MODULE mod_sy_proc
 		evalYield_offdiag2p = v
 
 	END FUNCTION evalYield_offdiag2p
+
 ! ----------
+
 	REAL(dp) FUNCTION evalYield_offdiag2p_serial(k,Sxyz1,lambda1,Sxyz2,lambda2)
 		implicit none
 
@@ -100,7 +189,9 @@ MODULE mod_sy_proc
 		evalYield_offdiag2p_serial = v
 
 	END FUNCTION evalYield_offdiag2p_serial
+
 ! ----------
+
 	REAL(dp) FUNCTION evalYield_offdiag2p_kernel_F(k2,a1,Sxyz1_a1,lambda1,Sxyz2,lambda2)
 		implicit none
 
@@ -147,5 +238,7 @@ MODULE mod_sy_proc
 		evalYield_offdiag2p_kernel_F = y
 
 	END FUNCTION evalYield_offdiag2p_kernel_F
+
 ! ----------
+
 END MODULE mod_sy_proc

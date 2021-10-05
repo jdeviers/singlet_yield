@@ -88,7 +88,7 @@ MODULE random_sampling ! Can also be called from prog_sy_parallel
 
 
     ! Final normalisation and return:
-    R_S = (current_rsum / current_rcount) * k2 / Z 
+    R_S = current_ravg * N_max * k2 / Z 
 
   END FUNCTION R_S
 

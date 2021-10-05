@@ -5,13 +5,13 @@ PROGRAM prog_sy
 
 	COMPLEX(8),ALLOCATABLE :: Sxyz1(:,:,:),Sxyz2(:,:,:)
 	REAL(dp)  ,ALLOCATABLE :: lambda1(:),lambda2(:)
-	REAL(dp)               :: v
+	REAL(dp)               :: v_diag,v_offdiag
 	REAL(dp),PARAMETER     :: k = 1.   ! Initial value for k_f
-	INTEGER, PARAMETER     :: N = 250  ! NxN S_(x,y,z) operators
+	INTEGER, PARAMETER     :: N = 200  ! NxN S_(x,y,z) operators
 	INTEGER                :: i,j
 
 !	.. Timing vars ..
-	INTEGER                :: it0,it1,rate ! CPU_TIME() unsuitable for parallel runs
+	INTEGER                :: it1,it2,it3,it4,rate1,rate2 ! CPU_TIME() unsuitable for parallel runs
 
 !	.. Switch ..
 	LOGICAL,PARAMETER      :: WRITE_MAT = .TRUE.
@@ -57,14 +57,25 @@ PROGRAM prog_sy
 !
 ! ---------- SINGLET YIELD CALCULATION SECTION ----------
 !
-! -- Calc singlet yield with parallelised second method
-	CALL SYSTEM_CLOCK(count_rate = rate)
-	CALL SYSTEM_CLOCK(it0)
-	v = evalYield_offdiag2p(k,Sxyz1,lambda1,Sxyz2,lambda2)
+! -- Calc diagonal contribution to the singlet yield (serial):
+	CALL SYSTEM_CLOCK(count_rate = rate1)
 	CALL SYSTEM_CLOCK(it1)
-
-	WRITE(*,'(/,A,E12.5)') 'Parallelised offdiag method: v = ',v
-	WRITE(*,'(A,E10.3,A,I0)') 'Timing: ',REAL(it1-it0)/REAL(rate), 's for N = ',N
+	v_diag = diag_ordered_sq(k,Sxyz1,Sxyz2)
+	CALL SYSTEM_CLOCK(it2)
+!	
+! -- Calc offdiag contribution to the singlet yield (parallel, optimised):
+	CALL SYSTEM_CLOCK(count_rate = rate2)
+	CALL SYSTEM_CLOCK(it3)
+	v_offdiag = evalYield_offdiag2p(k,Sxyz1,lambda1,Sxyz2,lambda2)
+	CALL SYSTEM_CLOCK(it4)
+!
+! -- Printout: 
+    WRITE(*,'(/,A,I0,A)') 'For N = ',N,':'
+	WRITE(*,1000) 'Diagonal singlet yield:     ',v_diag,   ' (timing: ',( REAL(it2-it1)/REAL(rate1) ),' s).'
+	WRITE(*,1000) 'Off-diagonal singlet yield: ',v_offdiag,' (timing: ',( REAL(it4-it3)/REAL(rate2) ),' s).'
+	WRITE(*,1000) 'TOTAL SINGLET YIELD:        ',v_diag+v_offdiag,' (timing: ',( REAL(it4-it1)/REAL((rate1+rate2)/2.d0) ),' s).'
+!
+1000 FORMAT(A,E12.5,A,E10.3,A)
 !
 ! -- Deallocations 
 	DEALLOCATE(Sxyz1,Sxyz2)
