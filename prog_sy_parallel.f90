@@ -63,7 +63,7 @@ PROGRAM prog_sy
 	v = evalYield_offdiag2p(k,Sxyz1,lambda1,Sxyz2,lambda2)
 	CALL SYSTEM_CLOCK(it1)
 
-	WRITE(*,'(/,A,E10.3)') 'Parallelised offdiag method: v = ',v
+	WRITE(*,'(/,A,E12.5)') 'Parallelised offdiag method: v = ',v
 	WRITE(*,'(A,E10.3,A,I0)') 'Timing: ',REAL(it1-it0)/REAL(rate), 's for N = ',N
 !
 ! -- Deallocations 

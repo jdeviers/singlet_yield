@@ -2,3 +2,9 @@ Random sampling strategies:
  - Make S products accessed at random, avoiding repetition with a LOGICAL table: requires a (N,N,N,N) tensor, so impractical.
  - Shuffle one or both S, then use optimised access algo: avoids repetition, but requires reordering lambdas to for every product. Might be more advantageous than the next method, with the appropriate data structure.
  - Make S products accessed at random, allowing repetition: track the running average at every step, or chunk of steps, and stop the algorithm once the singlet yield is stable enough (use a threshold). Can also print the number of actual iterations to estimate the proportion of double-counting. 
+
+
+Scaling: 
+ - full offdiag sampling: generate a sum over ALL matrix products, then finally scale by (k2/Z).
+ - opt offdiag sampling: generate a sum over half the matrix products, then scale by (2*k2/Z).
+ - RS offdiag sampling: generate a running average (rsum/rcount), extrapolate to full sum using: sum=nb.mat.products*ravg where nb.mat.products=(d1**2.d0 * d2**2.d0)-d1*d2, and eventually scale by (k2/Z)

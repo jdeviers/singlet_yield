@@ -21,11 +21,13 @@ MODULE random_sampling ! Can also be called from prog_sy_parallel
     INTEGER(4)           :: a1,a2,b1,b2,thread_id
 		REAL(dp)             :: thread_sum,current_rsum, current_ravg,last_ravg
     REAL(dp)             :: dla,dlb,k2,percent_sampled
+    REAL(dp)             :: N_max
 !	.. Local tensors ..
     REAL(dp),ALLOCATABLE :: indices(:,:)
 
 
     d1 = UBOUND(Sxyz1,3); d2 = UBOUND(Sxyz2,3); Z = FLOOR( (d1*d2)/4.d0 ); k2 = k*k
+    N_max = ( (d1**2.d0 * d2**2.d0) - d1*d2 )
     current_rcount = 0; current_rsum = 0.d0; last_ravg = 0.d0
     thread_count = 0; thread_sum = 0.d0
 
@@ -67,9 +69,10 @@ MODULE random_sampling ! Can also be called from prog_sy_parallel
 
         IF (thread_id .EQ. 0) THEN
           current_ravg = current_rsum/current_rcount
-          percent_sampled = current_rcount/(d1**2.d0 * d2**2.d0 - d1*d2)
+          percent_sampled = current_rcount/N_max
 !          WRITE(10,*) ( (current_rsum/current_rcount) * k2 / Z ),current_rsum,current_rcount,thread_count
-          WRITE(10,*) (current_rsum * k2 / (Z * (current_rcount / d1**2.d0 * d2**2.d0 - d1*d2)) ),  percent_sampled
+!          WRITE(10,*) (current_rsum * k2 / (Z * (current_rcount / d1**2.d0 * d2**2.d0 - d1*d2)) ),  percent_sampled
+          WRITE(10,*) ( current_ravg * N_max * k2 / Z ), current_rsum, current_rcount
         END IF
 
         IF ( ABS(current_ravg - last_ravg) .LE. threshold) EXIT ! All threads exit, not just 0 -- not sure it makes a difference
