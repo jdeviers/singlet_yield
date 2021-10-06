@@ -1,6 +1,6 @@
 PROGRAM rs_caller
 	USE mod_rwfile
-	USE random_sampling
+	USE mod_random_sampling
 	implicit none
 !
 	COMPLEX(8),ALLOCATABLE :: Sxyz1(:,:,:),Sxyz2(:,:,:)
@@ -59,7 +59,7 @@ PROGRAM rs_caller
 ! -- Calc singlet yield with parallelised second method
 	CALL SYSTEM_CLOCK(count_rate = rate)
 	CALL SYSTEM_CLOCK(it0)
-	v = R_S(threshold,k,Sxyz1,lambda1,Sxyz2,lambda2)
+	v = R_S(k,Sxyz1,lambda1,Sxyz2,lambda2,10)
 	CALL SYSTEM_CLOCK(it1)
 
 	WRITE(*,'(/,A,E10.3)') 'Parallelised offdiag method: v = ',v

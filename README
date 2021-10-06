@@ -11,4 +11,3 @@ Scaling:
 
 TODO: 
  - Organise all into folder. Make separate makefiles.
- - Dynamic and static kernels are redundant. Delete at least one of them. Maybe neither is even useful.
