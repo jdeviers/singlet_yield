@@ -3,12 +3,10 @@ PROG_time = prog_sy_timing.f90
 PROG_para = prog_sy_parallel.f90
 PROG_rndm = prog_sy_randomSampling.f90
 
-D_SRC=./sources/
-D_MOD=./modules/
-D_BIN=./
 
 MODS = $(wildcard mod_*.f90)
 OBJS = $(patsubst %.f90,%.o,$(MODS))
+
 
 PROGRAM_comp = sy_c
 PROGRAM_time = sy_t
